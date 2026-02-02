@@ -1,7 +1,4 @@
-# RydeU - Car Rental App
-
-A modern, user-friendly car rental application built with React Native, TypeScript, and Redux Toolkit. The app allows users to browse available vehicles, select pickup/drop-off dates and times, and complete their bookings seamlessly.
-
+# RydeU - Assignment
 ## 🚀 Features
 
 - **User Authentication**
@@ -41,21 +38,24 @@ A modern, user-friendly car rental application built with React Native, TypeScri
 ## 📱 Screens
 
 ### Login Screen
-![Login Screen](./screenshots/login-screen.png)
+<img width="300" height="700" alt="image" src="https://github.com/user-attachments/assets/8df4345e-92c9-4c65-9598-59b1e166d2ce" />
+
 
 ### Home Screen
 - Date and time selection
 - Available time slots
 - Booking confirmation
 
-![Home Screen](./screenshots/home-screen.png)
+<img width="300" height="700" alt="image" src="https://github.com/user-attachments/assets/167203d2-b3f3-4607-944c-f596121ede42" />
+
 
 ### Calendar Overlay
-![Calendar Overlay](./screenshots/calendar-overlay.png)
+<img width="300" height="700" alt="image" src="https://github.com/user-attachments/assets/b15ec579-bcb4-4635-b00a-2ef23074f161" />
+
 
 ## 🎥 Demo Video
 
-[![Demo Video](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+https://github.com/user-attachments/assets/3666e399-d474-4077-a7d0-95ed96f513f5
 
 ## 🚀 Getting Started
 
