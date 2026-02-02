@@ -64,7 +64,8 @@ https://github.com/user-attachments/assets/3666e399-d474-4077-a7d0-95ed96f513f5
 - Node.js (v14 or later)
 - npm or yarn
 - React Native CLI
-- Xcode (iOS) / Android Studio (Android)
+- Xcode (iOS) / VS-Code (Windows)
+- Mobile phone with Expo Go app installed for testing
 
 ### Installation
 
