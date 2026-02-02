@@ -64,6 +64,8 @@ const MonthView: React.FC<Props> = ({ month }) => {
                     const formatted = d.format('YYYY-MM-DD');
                     const isSelected = selectedDate === formatted;
                     const isToday = formatted === today;
+                    const isPast = d.isBefore(moment(), 'day');
+
 
                     return (
                         <TouchableOpacity
@@ -72,7 +74,9 @@ const MonthView: React.FC<Props> = ({ month }) => {
                                 styles.day,
                                 isSelected && styles.selectedDay,
                                 isToday && styles.todayDay,
+                                isPast && styles.disabledDay,
                             ]}
+                            disabled={isPast}
                             onPress={() =>
                                 dispatch(setSelectedDate(formatted))
                             }
@@ -98,11 +102,15 @@ export default MonthView;
 const styles = StyleSheet.create({
     card: {
         backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 24,
-        elevation: 3,
+        borderRadius: 20,
+        padding: 20,
+        margin: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 4,
     },
+
     monthTitle: {
         fontSize: 18,
         fontWeight: '700',
@@ -135,6 +143,7 @@ const styles = StyleSheet.create({
     },
     selectedDay: {
         backgroundColor: '#2E86DE',
+        transform: [{ scale: 1.1 }],
     },
     todayDay: {
         borderWidth: 1,
@@ -146,5 +155,8 @@ const styles = StyleSheet.create({
     selectedText: {
         color: '#fff',
         fontWeight: '600',
+    },
+    disabledDay: {
+        opacity: 0.3,
     },
 });

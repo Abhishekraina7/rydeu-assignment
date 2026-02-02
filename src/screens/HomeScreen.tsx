@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -16,7 +16,6 @@ import { setSelectedDate, setSelectedTime } from '../features/calendar/calendarS
 import { logout } from '../features/auth/authSlice';
 import moment from 'moment';
 
-// Icon components (replace with your preferred icon library like react-native-vector-icons)
 const UserIcon = () => (
     <View style={styles.userIconPlaceholder}>
         <Text style={styles.userIconText}>👤</Text>
@@ -42,32 +41,23 @@ interface DateItem {
 interface TimeSlot {
     id: string;
     time: string;
+    date: Date;
 }
 
-interface CalendarOverlayProps {
-    visible: boolean;
-    onClose: () => void;
-    onSelectDate: (date: Date) => void;
-    selectedDate: Date | null;
-}
-
-const CalendarOverlay = ({ visible, onClose, onSelectDate, selectedDate }: CalendarOverlayProps) => {
+const CalendarOverlay = ({ visible, onClose, onSelectDate, selectedDate }) => {
     const today = new Date();
     const sixMonthsLater = new Date();
     sixMonthsLater.setMonth(today.getMonth() + 6);
 
     const months = [];
     let currentDate = new Date(today);
-    currentDate.setDate(1); // Start from the first day of the current month
-
-    // Generate 6 months of calendar data
+    currentDate.setDate(1);
     while (currentDate <= sixMonthsLater) {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const firstDayOfMonth = new Date(year, month, 1).getDay();
 
-        // Get days from previous month to fill the first week
         const prevMonthDays = [];
         const prevMonth = month === 0 ? 11 : month - 1;
         const prevMonthYear = month === 0 ? year - 1 : year;
@@ -83,7 +73,6 @@ const CalendarOverlay = ({ visible, onClose, onSelectDate, selectedDate }: Calen
             });
         }
 
-        // Get days of current month
         const currentMonthDays = [];
         for (let day = 1; day <= daysInMonth; day++) {
             currentMonthDays.push({
@@ -95,11 +84,10 @@ const CalendarOverlay = ({ visible, onClose, onSelectDate, selectedDate }: Calen
             });
         }
 
-        // Get days from next month to complete the last week
         const nextMonthDays = [];
         const nextMonth = month === 11 ? 0 : month + 1;
         const nextMonthYear = month === 11 ? year + 1 : year;
-        const daysToAdd = 42 - (prevMonthDays.length + daysInMonth); // 6 rows * 7 days
+        const daysToAdd = 42 - (prevMonthDays.length + daysInMonth);
 
         for (let day = 1; day <= daysToAdd; day++) {
             nextMonthDays.push({
@@ -120,7 +108,6 @@ const CalendarOverlay = ({ visible, onClose, onSelectDate, selectedDate }: Calen
             days: allDays
         });
 
-        // Move to first day of next month
         currentDate.setMonth(month + 1);
     }
 
@@ -213,6 +200,44 @@ const CalendarOverlay = ({ visible, onClose, onSelectDate, selectedDate }: Calen
     );
 };
 
+const generateTimeSlots = (): TimeSlot[] => {
+    const slots: TimeSlot[] = [];
+    const now = new Date();
+
+    const currentMinutes = now.getMinutes();
+    const minutesToAdd = currentMinutes < 30 ? 30 - currentMinutes : 60 - currentMinutes;
+    let currentTime = new Date(now.getTime() + minutesToAdd * 60000);
+
+    const endTime = new Date(now);
+    endTime.setHours(22, 0, 0, 0);
+
+
+    if (currentTime >= endTime) {
+        currentTime = new Date(now);
+        currentTime.setDate(currentTime.getDate() + 1);
+        currentTime.setHours(9, 0, 0, 0);
+    }
+
+
+    while (currentTime.getHours() < 22 || (currentTime.getHours() === 22 && currentTime.getMinutes() === 0)) {
+        const hours = currentTime.getHours();
+        const minutes = currentTime.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours % 12 || 12;
+        const timeString = `${displayHours}:${minutes === 0 ? '00' : minutes} ${ampm}`;
+
+        slots.push({
+            id: currentTime.getTime().toString(),
+            time: timeString,
+            date: new Date(currentTime)
+        });
+
+        currentTime = new Date(currentTime.getTime() + 30 * 60000);
+    }
+
+    return slots;
+};
+
 const HomeScreen: React.FC = () => {
     const dispatch = useAppDispatch();
 
@@ -221,6 +246,11 @@ const HomeScreen: React.FC = () => {
 
     const { user } = useAppSelector((state) => state.auth);
 
+    const [timeSlots, setTimeSlots] = React.useState<TimeSlot[]>([]);
+
+    React.useEffect(() => {
+        setTimeSlots(generateTimeSlots());
+    }, []);
 
     const dates: DateItem[] = Array.from({ length: 5 }).map((_, index) => {
         const date = moment().add(index, 'days');
@@ -231,21 +261,11 @@ const HomeScreen: React.FC = () => {
         };
     });
 
-
-    const timeSlots: TimeSlot[] = [
-        { id: '1', time: '09:00 AM' },
-        { id: '2', time: '10:30 AM' },
-        { id: '3', time: '12:00 PM' },
-        { id: '4', time: '02:30 PM' },
-    ];
-
     const formatSelectedDate = (): string => {
         if (!selectedDate || !selectedTime) return 'Select date & time';
 
         return `${moment(selectedDate).format('MMM D, YYYY')} • ${selectedTime}`;
     };
-
-
 
     const handleConfirm = () => {
         // Handle confirmation logic
@@ -307,12 +327,12 @@ const HomeScreen: React.FC = () => {
                 style={styles.content}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Book Your Exploration */}
+                {/* Book */}
                 <Text style={styles.sectionTitle}>Choose Day and Time</Text>
 
                 {calendarHeader}
 
-                {/* Date Picker */}
+                {/* Date */}
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -399,11 +419,9 @@ const HomeScreen: React.FC = () => {
                     onPress={handleConfirm}
                     disabled={!selectedDate || !selectedTime}
                 >
-
                     <Text style={styles.confirmButtonText}>Confirm</Text>
                 </TouchableOpacity>
             </View>
-
             {/* Calendar Overlay */}
             <CalendarOverlay
                 visible={showCalendarOverlay}
@@ -417,40 +435,34 @@ const HomeScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flex: 2,
         backgroundColor: '#FFFFFF',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingTop: 16,
-        paddingBottom: 12,
+        paddingTop: Platform.OS === 'ios' ? 50 : 50,
+        paddingBottom: 16,
+        backgroundColor: '#FFFFFF',
     },
     userInfo: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
     },
     avatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         backgroundColor: '#FFF0E6',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
-    userIconPlaceholder: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    userIconText: {
-        fontSize: 20,
-    },
     greetingContainer: {
-        justifyContent: 'center',
+        flex: 1,
     },
     welcomeText: {
         fontSize: 14,
@@ -458,18 +470,19 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     userName: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
         color: '#1A1A1A',
     },
     logoutButton: {
         width: 44,
         height: 44,
-        borderRadius: 12,
+        borderRadius: 8,
         borderWidth: 1,
         borderColor: '#E5E5E5',
         justifyContent: 'center',
         alignItems: 'center',
+        marginLeft: 8,
     },
     logoutIcon: {
         fontSize: 20,
@@ -483,7 +496,6 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingBottom: 100, // Add padding at the bottom to prevent content from being hidden behind the confirm button
     },
     sectionTitle: {
         fontSize: 22,
@@ -583,37 +595,31 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     selectionCard: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: '#FFFFFF',
-        borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
-        padding: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingBottom: Platform.OS === 'ios' ? 25 : 12,
+        backgroundColor: '#FFF5EE',
+        marginHorizontal: 20,
+        marginBottom: Platform.OS === 'ios' ? 20 : 16,
+        padding: 20,
+        borderRadius: 20,
     },
     selectionContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1,
+        marginBottom: 16,
     },
     calendarIconContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#FFF0E6',
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
     calendarIconText: {
-        fontSize: 16,
+        fontSize: 20,
     },
     selectionTextContainer: {
+        flex: 1,
         justifyContent: 'center',
     },
     selectionLabel: {
@@ -621,7 +627,7 @@ const styles = StyleSheet.create({
         color: '#666666',
         fontWeight: '600',
         letterSpacing: 0.5,
-        marginBottom: 2,
+        marginBottom: 4,
     },
     selectionValue: {
         fontSize: 15,
@@ -629,19 +635,14 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     confirmButton: {
-        backgroundColor: '#FF6B35',
-        borderRadius: 6,
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        marginLeft: 12,
-        minWidth: 100,
+        backgroundColor: '#F28C52',
+        paddingVertical: 14,
+        borderRadius: 16,
         alignItems: 'center',
-        justifyContent: 'center',
-        height: 44,
     },
     confirmButtonText: {
         color: '#FFFFFF',
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: '600',
     },
     overlayContainer: {
@@ -705,7 +706,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginVertical: 4,
     },
-    otherMonthDayText: {
+    dayText: {
         fontSize: 16,
         color: '#1A1A1A',
         fontWeight: '500',
